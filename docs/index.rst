@@ -12,8 +12,10 @@ interfaces.
    interacting
    settings
    non_orm_data_sources
+   tools
 
    resources
+   bundles
    api
    fields
    caching
