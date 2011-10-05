@@ -12,8 +12,7 @@ from tastypie.http import HttpUnauthorized
 try:
     from hashlib import sha1
 except ImportError:
-    import sha
-    sha1 = sha.sha
+    from sha import sha as sha1
 
 try:
     import python_digest
