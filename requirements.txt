@@ -10,5 +10,5 @@ PyYAML
 
 # Authentication (optional)
 django-oauth-plus
+oauth2
 python-digest
-python-oauth2

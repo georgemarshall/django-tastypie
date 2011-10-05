@@ -26,7 +26,7 @@ Optional
 --------
 
 * python-digest (https://bitbucket.org/akoha/python-digest/)
-* python-oauth2 (https://github.com/simplegeo/python-oauth2)
+* oauth2 (https://github.com/simplegeo/python-oauth2)
 * django-oauth-plus (https://bitbucket.org/david/django-oauth-plus/)
 * lxml (http://codespeak.net/lxml/) if using the XML serializer
 * pyyaml (http://pyyaml.org/) if using the YAML serializer
