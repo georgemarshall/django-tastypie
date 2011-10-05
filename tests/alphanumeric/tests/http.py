@@ -1,7 +1,6 @@
 import httplib
 
-from django.utils import simplejson as json
-from django.utils import unittest
+from django.utils import simplejson as json, unittest
 from tastypie.serializers import lxml, yaml, biplist
 
 from ..testcases import TestServerTestCase

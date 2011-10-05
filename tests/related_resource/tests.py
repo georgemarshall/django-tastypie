@@ -1,7 +1,7 @@
-import json
-from django.conf import settings
 from django.contrib.auth.models import User
 from django.test import TestCase
+from django.utils import simplejson as json
+
 from core.models import Note, MediaBit
 from core.tests.mocks import MockRequest
 from related_resource.api.resources import FreshNoteResource
@@ -137,7 +137,6 @@ class ExplicitM2MResourceRegressionTest(TestCase):
 
         # and check whether the extradata is present
         self.assertEqual(data['extradata']['name'], u'additional')
-
 
     def test_post_new_tag(self):
         resource = api.canonical_resource_for('tag')

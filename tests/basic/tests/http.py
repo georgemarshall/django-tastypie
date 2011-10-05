@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import httplib
 
 from django.utils import simplejson as json

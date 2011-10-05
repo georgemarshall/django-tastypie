@@ -1,6 +1,10 @@
-from django.conf.urls.defaults import *
+from __future__ import absolute_import
+
+from django.conf.urls import patterns, include, url
 from tastypie.api import Api
-from validation.api.resources import NoteResource, UserResource
+
+from .resources import NoteResource, UserResource
+
 
 api = Api(api_name='v1')
 api.register(NoteResource(), canonical=True)

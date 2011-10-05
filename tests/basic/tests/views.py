@@ -1,9 +1,6 @@
 from django.http import HttpRequest
 from django.test import TestCase
-try:
-    import json
-except ImportError:
-    import simplejson as json
+from django.utils import simplejson as json
 
 
 class ViewsTestCase(TestCase):
@@ -12,7 +9,10 @@ class ViewsTestCase(TestCase):
         self.assertEqual(resp.status_code, 200)
         deserialized = json.loads(resp.content)
         self.assertEqual(len(deserialized), 2)
-        self.assertEqual(deserialized['notes'], {'list_endpoint': '/api/v1/notes/', 'schema': '/api/v1/notes/schema/'})
+        self.assertDictEqual(deserialized['notes'], {
+            'list_endpoint': '/api/v1/notes/',
+            'schema': '/api/v1/notes/schema/'
+        })
 
         resp = self.client.get('/api/v1/notes/', data={'format': 'json'})
         self.assertEqual(resp.status_code, 200)
@@ -20,7 +20,10 @@ class ViewsTestCase(TestCase):
         self.assertEqual(len(deserialized), 2)
         self.assertEqual(deserialized['meta']['limit'], 20)
         self.assertEqual(len(deserialized['objects']), 2)
-        self.assertEqual([obj['title'] for obj in deserialized['objects']], [u'First Post!', u'Another Post'])
+        self.assertListEqual(
+            [obj['title'] for obj in deserialized['objects']],
+            [u'First Post!', u'Another Post']
+        )
 
         resp = self.client.get('/api/v1/notes/1/', data={'format': 'json'})
         self.assertEqual(resp.status_code, 200)
@@ -33,7 +36,10 @@ class ViewsTestCase(TestCase):
         deserialized = json.loads(resp.content)
         self.assertEqual(len(deserialized), 1)
         self.assertEqual(len(deserialized['objects']), 2)
-        self.assertEqual([obj['title'] for obj in deserialized['objects']], [u'Another Post', u'First Post!'])
+        self.assertListEqual(
+            [obj['title'] for obj in deserialized['objects']],
+            [u'Another Post', u'First Post!']
+        )
 
     def test_posts(self):
         request = HttpRequest()
