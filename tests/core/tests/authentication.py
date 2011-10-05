@@ -1,23 +1,19 @@
 import base64
 import time
-import warnings
+
 from django.contrib.auth.models import User
-from django.core import mail
+from django.core.exceptions import ImproperlyConfigured
 from django.http import HttpRequest
 from django.test import TestCase
-from tastypie.authentication import Authentication, BasicAuthentication, ApiKeyAuthentication, DigestAuthentication, OAuthAuthentication
+from django.utils import unittest
+
+from tastypie.authentication import (
+    python_digest, oauth2, oauth_provider, Authentication,
+    BasicAuthentication, ApiKeyAuthentication, DigestAuthentication,
+    OAuthAuthentication
+)
 from tastypie.http import HttpUnauthorized
 from tastypie.models import ApiKey, create_api_key
-
-
-# Be tricky.
-from tastypie.authentication import python_digest, oauth2, oauth_provider
-if python_digest is None:
-    warnings.warn("Running tests without python_digest! Bad news!")
-if oauth2 is None:
-    warnings.warn("Running tests without oauth2! Bad news!")
-if oauth_provider is None:
-    warnings.warn("Running tests without oauth_provider! Bad news!")
 
 
 class AuthenticationTestCase(TestCase):
@@ -124,6 +120,7 @@ class DigestAuthenticationTestCase(TestCase):
         super(DigestAuthenticationTestCase, self).setUp()
         ApiKey.objects.all().delete()
 
+    @unittest.skipUnless(python_digest, 'python-digest not installed')
     def test_is_authenticated(self):
         auth = DigestAuthentication()
         request = HttpRequest()
@@ -170,10 +167,16 @@ class DigestAuthenticationTestCase(TestCase):
         auth_request = auth.is_authenticated(request)
         self.assertEqual(auth_request, True)
 
+    @unittest.skipIf(python_digest, 'python-digest is installed')
+    def test_not_installed(self):
+        self.assertRaises(ImproperlyConfigured, DigestAuthentication)
+
 
 class OAuthAuthenticationTestCase(TestCase):
     fixtures = ['note_testdata.json']
 
+    @unittest.skipUnless(oauth2, 'oauth2 not installed')
+    @unittest.skipUnless(oauth_provider, 'django-oauth not installed')
     def test_is_authenticated(self):
         from oauth_provider.models import Consumer, Token, Resource
         auth = OAuthAuthentication()
@@ -214,3 +217,11 @@ class OAuthAuthenticationTestCase(TestCase):
         resp = auth.is_authenticated(request)
         self.assertEqual(resp, True)
         self.assertEqual(request.user.pk, user.pk)
+
+    @unittest.skipIf(oauth2, 'oauth2 is installed')
+    def test_oauth2_not_installed(self):
+        self.assertRaises(ImproperlyConfigured, OAuthAuthentication)
+
+    @unittest.skipIf(oauth_provider, 'django-oauth is installed')
+    def test_django_oauth_not_installed(self):
+        self.assertRaises(ImproperlyConfigured, OAuthAuthentication)
