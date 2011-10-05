@@ -1,4 +1,7 @@
 from settings import *
-INSTALLED_APPS.append('basic')
+
+INSTALLED_APPS += (
+    'basic',
+)
 
 ROOT_URLCONF = 'basic.urls'

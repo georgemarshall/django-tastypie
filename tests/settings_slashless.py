@@ -1,6 +1,9 @@
 from settings import *
-INSTALLED_APPS.append('basic')
-INSTALLED_APPS.append('slashless')
+
+INSTALLED_APPS += (
+    'basic',
+    'slashless',
+)
 
 ROOT_URLCONF = 'slashless.api.urls'
 

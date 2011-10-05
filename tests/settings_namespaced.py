@@ -1,5 +1,8 @@
 from settings import *
-INSTALLED_APPS.append('basic')
-INSTALLED_APPS.append('namespaced')
+
+INSTALLED_APPS += (
+    'basic',
+    'namespaced',
+)
 
 ROOT_URLCONF = 'namespaced.api.urls'

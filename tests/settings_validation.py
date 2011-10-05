@@ -1,5 +1,8 @@
 from settings import *
-INSTALLED_APPS.append('basic')
-INSTALLED_APPS.append('validation')
+
+INSTALLED_APPS += (
+    'basic',
+    'validation',
+)
 
 ROOT_URLCONF = 'validation.api.urls'
