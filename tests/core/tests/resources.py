@@ -23,7 +23,7 @@ from tastypie.bundle import Bundle
 from tastypie.exceptions import InvalidFilterError, InvalidSortError, ImmediateHttpResponse, BadRequest, NotFound
 from tastypie.paginator import Paginator
 from tastypie.resources import Resource, ModelResource, ALL, ALL_WITH_RELATIONS, convert_post_to_put, convert_post_to_patch
-from tastypie.serializers import Serializer, lxml, yaml, biplist
+from tastypie.serializers import Serializer, lxml
 from tastypie.throttle import CacheThrottle
 from tastypie.validation import FormValidation
 
@@ -443,78 +443,106 @@ class ResourceTestCase(TestCase):
         bundles_seen = []
         self.assertRaises(NotImplementedError, basic.rollback, bundles_seen)
 
-    # FIXME: Needs a better comparison
-    # Broken by commit bc39633ebdc99cb78f3657b2c94112efff05698b
-    @unittest.skip("Can't match NOT_PROVIDED instances")
     def test_build_schema(self):
         basic = BasicResource()
-        self.assertDictEqual(basic.build_schema(), {
+        self.assertDictEqual({
+            'allowed_detail_http_methods': ['get', 'post', 'put', 'delete', 'patch'],
+            'allowed_list_http_methods': ['get', 'post', 'put', 'delete', 'patch'],
+            'default_format': 'application/json',
+            'default_limit': 20,
             'fields': {
-                'view_count': {
-                    'help_text': 'Integer data. Ex: 2673',
-                    'readonly': False,
-                    'type': 'integer',
-                    'nullable': False
-                },
                 'date_joined': {
+                    'blank': False,
+                    'default': u'No default provided.',
                     'help_text': 'A date & time as a string. Ex: "2010-11-10T03:07:43"',
+                    'nullable': True,
                     'readonly': False,
                     'type': 'datetime',
-                    'nullable': True
+                    'unique': False
                 },
                 'name': {
+                    'blank': False,
+                    'default': u'No default provided.',
                     'help_text': 'Unicode string data. Ex: "Hello World"',
+                    'nullable': False,
                     'readonly': False,
                     'type': 'string',
-                    'nullable': False
+                    'unique': False
                 },
                 'resource_uri': {
+                    'blank': False,
+                    'default': u'No default provided.',
                     'help_text': 'Unicode string data. Ex: "Hello World"',
+                    'nullable': False,
                     'readonly': True,
                     'type': 'string',
-                    'nullable': False
+                    'unique': False
+                },
+                'view_count': {
+                    'blank': False,
+                    'default': 0,
+                    'help_text': 'Integer data. Ex: 2673',
+                    'nullable': False,
+                    'readonly': False,
+                    'type': 'integer',
+                    'unique': False
                 }
-            },
-            'default_format': 'application/json'
-        })
+            }
+        }, basic._meta.serializer.to_simple(basic.build_schema(), None))
 
         basic = BasicResource()
         basic._meta.ordering = ['date_joined', 'name']
         basic._meta.filtering = {'date_joined': ['gt', 'gte'], 'name': ALL}
-        self.assertDictEqual(basic.build_schema(), {
-            'fields': {
-                'view_count': {
-                    'help_text': 'Integer data. Ex: 2673',
-                    'readonly': False,
-                    'type': 'integer',
-                    'nullable': False
-                },
-                'date_joined': {
-                    'help_text': 'A date & time as a string. Ex: "2010-11-10T03:07:43"',
-                    'readonly': False,
-                    'type': 'datetime',
-                    'nullable': True
-                },
-                'name': {
-                    'help_text': 'Unicode string data. Ex: "Hello World"',
-                    'readonly': False,
-                    'type': 'string',
-                    'nullable': False
-                },
-                'resource_uri': {
-                    'help_text': 'Unicode string data. Ex: "Hello World"',
-                    'readonly': True,
-                    'type': 'string',
-                    'nullable': False
-                }
-            },
+        self.maxDiff = None
+        self.assertDictEqual({
+            'allowed_detail_http_methods': ['get', 'post', 'put', 'delete', 'patch'],
+            'allowed_list_http_methods': ['get', 'post', 'put', 'delete', 'patch'],
             'default_format': 'application/json',
-            'ordering': ['date_joined', 'name'],
+            'default_limit': 20,
             'filtering': {
                 'date_joined': ['gt', 'gte'],
                 'name': ALL,
-            }
-        })
+            },
+            'ordering': ['date_joined', 'name'],
+            'fields': {
+                'date_joined': {
+                    'blank': False,
+                    'default': u'No default provided.',
+                    'help_text': 'A date & time as a string. Ex: "2010-11-10T03:07:43"',
+                    'nullable': True,
+                    'readonly': False,
+                    'type': 'datetime',
+                    'unique': False
+                },
+                'name': {
+                    'blank': False,
+                    'default': u'No default provided.',
+                    'help_text': 'Unicode string data. Ex: "Hello World"',
+                    'nullable': False,
+                    'readonly': False,
+                    'type': 'string',
+                    'unique': False
+                },
+                'resource_uri': {
+                    'blank': False,
+                    'default': u'No default provided.',
+                    'help_text': 'Unicode string data. Ex: "Hello World"',
+                    'nullable': False,
+                    'readonly': True,
+                    'type': 'string',
+                    'unique': False
+                },
+                'view_count': {
+                    'blank': False,
+                    'default': 0,
+                    'help_text': 'Integer data. Ex: 2673',
+                    'nullable': False,
+                    'readonly': False,
+                    'type': 'integer',
+                    'unique': False
+                }
+            },
+        }, basic._meta.serializer.to_simple(basic.build_schema(), None))
 
     def test_subclassing(self):
         class CommonMeta:
@@ -1066,17 +1094,8 @@ class ModelResourceTestCase(TestCase):
         note_1 = resource.get_via_uri('/api/v1/notes/1/')
         self.assertEqual(note_1.pk, 1)
 
-        try:
-            should_fail = resource.get_via_uri('http://example.com/')
-            self.fail("'get_via_uri' should fail miserably with something that isn't an object URI.")
-        except NotFound:
-            pass
-
-        try:
-            should_also_fail = resource.get_via_uri('/api/v1/notes/')
-            self.fail("'get_via_uri' should fail miserably with something that isn't an object URI.")
-        except MultipleObjectsReturned:
-            pass
+        self.assertRaises(NotFound, resource.get_via_uri, 'http://example.com/')
+        self.assertRaises(MultipleObjectsReturned, resource.get_via_uri, '/api/v1/notes/')
 
         # Check with the request.
         request = HttpRequest()
@@ -1308,11 +1327,7 @@ class ModelResourceTestCase(TestCase):
         # Test slicing.
         # First an invalid offset.
         request.GET = {'format': 'json', 'offset': 'abc', 'limit': 1}
-        try:
-            resp = resource.get_list(request)
-            self.fail()
-        except BadRequest, e:
-            pass
+        self.assertRaises(BadRequest, resource.get_list, request)
 
         # Try again with ``wrap_view`` for sanity.
         resp = resource.wrap_view('get_list')(request)
@@ -1320,19 +1335,11 @@ class ModelResourceTestCase(TestCase):
 
         # Then an out of range offset.
         request.GET = {'format': 'json', 'offset': -1, 'limit': 1}
-        try:
-            resp = resource.get_list(request)
-            self.fail()
-        except BadRequest, e:
-            pass
+        self.assertRaises(BadRequest, resource.get_list, request)
 
         # Then an out of range limit.
         request.GET = {'format': 'json', 'offset': 0, 'limit': -1}
-        try:
-            resp = resource.get_list(request)
-            self.fail()
-        except BadRequest, e:
-            pass
+        self.assertRaises(BadRequest, resource.get_list, request)
 
         # Valid slice.
         request.GET = {'format': 'json', 'offset': 0, 'limit': 2}
@@ -1758,11 +1765,7 @@ class ModelResourceTestCase(TestCase):
         request = HttpRequest()
         request.GET = {'format': 'jsonp', 'callback': '()'}
         request.method = 'GET'
-        try:
-            resp = resource.dispatch_detail(request, pk=1)
-            self.fail()
-        except BadRequest, e:
-            pass
+        self.assertRaises(BadRequest, resource.dispatch_detail, request, pk=1)
 
         # Try again with ``wrap_view`` for sanity.
         resp = resource.wrap_view('dispatch_detail')(request, pk=1)
@@ -1876,7 +1879,7 @@ class ModelResourceTestCase(TestCase):
             },
             "ordering": ["title", "slug", "resource_uri"],
         }
-        self.assertEqual(json.loads(resp.content), schema)
+        self.assertDictEqual(schema, json.loads(resp.content))
 
         # Unpatch.
         resource.fields['created']._default = old_created
@@ -1989,12 +1992,14 @@ class ModelResourceTestCase(TestCase):
 
     def test_obj_delete_list_custom_qs(self):
         self.assertEqual(len(Note.objects.all()), 6)
-        notes = NoteResource().obj_delete_list()
+        notes = NoteResource()
+        notes.obj_delete_list()
         self.assertEqual(len(Note.objects.all()), 2)
 
     def test_obj_delete_list_basic_qs(self):
         self.assertEqual(len(Note.objects.all()), 6)
-        customs = VeryCustomNoteResource().obj_delete_list()
+        customs = VeryCustomNoteResource()
+        customs.obj_delete_list()
         self.assertEqual(len(Note.objects.all()), 0)
 
     def test_obj_delete_list_non_queryset(self):
@@ -2007,7 +2012,8 @@ class ModelResourceTestCase(TestCase):
 
         self.assertEqual(len(Note.objects.all()), 6)
         # This is a regression. Used to fail miserably.
-        notes = NonQuerysetNoteResource().obj_delete_list()
+        notes = NonQuerysetNoteResource()
+        notes.obj_delete_list()
         self.assertEqual(len(Note.objects.all()), 4)
 
     def test_obj_create(self):
@@ -2426,9 +2432,9 @@ class ModelResourceTestCase(TestCase):
         bundle_3 = Bundle(data={
             'author': '/api/v1/users/1/',
         })
-        hydrated3 = nrrnr.obj_create(bundle_2)
-        self.assertEqual(hydrated2.obj.author.username, u'johndoe')
-        self.assertEqual(hydrated2.obj.subjects.count(), 0)
+        hydrated3 = nrrnr.obj_create(bundle_3)
+        self.assertEqual(hydrated3.obj.author.username, u'johndoe')
+        self.assertEqual(hydrated3.obj.subjects.count(), 0)
 
     def test_per_user_authorization(self):
         from django.contrib.auth.models import AnonymousUser, User
@@ -2499,17 +2505,8 @@ class ModelResourceTestCase(TestCase):
         self.assertEqual(ponr._pre_limits, 0)
         self.assertEqual(ponr._post_limits, 1)
 
-        try:
-            too_many = ponr.obj_get(request=empty_request, is_active=True, pk__gte=1)
-            self.fail()
-        except MultipleObjectsReturned, e:
-            self.assertEqual(str(e), "More than 'Note' matched 'is_active=True, pk__gte=1'.")
-
-        try:
-            too_many = ponr.obj_get(request=empty_request, pk=1000000)
-            self.fail()
-        except Note.DoesNotExist, e:
-            self.assertEqual(str(e), "Couldn't find an instance of 'Note' which matched 'pk=1000000'.")
+        self.assertRaisesRegexp(MultipleObjectsReturned, "More than 'Note' matched 'is_active=True, pk__gte=1'.", ponr.obj_get, request=empty_request, is_active=True, pk__gte=1)
+        self.assertRaisesRegexp(Note.DoesNotExist, "Couldn't find an instance of 'Note' which matched 'pk=1000000'.", ponr.obj_get, request=empty_request, pk=1000000)
 
     def test_browser_cache(self):
         resource = NoteResource()
@@ -2658,11 +2655,7 @@ class BustedResourceTestCase(TestCase):
         settings.DEBUG = True
         settings.TASTYPIE_FULL_DEBUG = True
 
-        try:
-            resp = self.resource.wrap_view('get_list')(self.request, pk=1)
-            self.fail()
-        except YouFail:
-            pass
+        self.assertRaises(YouFail, self.resource.wrap_view('get_list'), self.request, pk=1)
 
     def test_debug_on_without_full(self):
         settings.DEBUG = True
