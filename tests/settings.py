@@ -9,7 +9,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': 'tastypie.db',
-        'TEST_NAME': 'tastypie-test.db'
+        'TEST_NAME': ':memory:'
     }
 }
 
