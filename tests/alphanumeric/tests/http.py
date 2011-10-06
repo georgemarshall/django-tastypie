@@ -2,6 +2,7 @@ from django.test.testcases import TestCase
 from django.utils import simplejson as json, unittest
 from tastypie.serializers import lxml, yaml, biplist
 
+
 class HTTPTestCase(TestCase):
     def test_get_apis_json(self):
         response = self.client.get('/api/v1/', HTTP_ACCEPT='application/json')

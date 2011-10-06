@@ -11,17 +11,17 @@ class Note(models.Model):
     is_active = models.BooleanField(default=True)
     created = models.DateTimeField(default=datetime.datetime.now)
     updated = models.DateTimeField(default=datetime.datetime.now)
-    
+
     def __unicode__(self):
         return self.title
-    
+
     def save(self, *args, **kwargs):
         self.updated = datetime.datetime.now()
         return super(Note, self).save(*args, **kwargs)
-    
+
     def what_time_is_it(self):
         return datetime.datetime(2010, 4, 1, 0, 48)
-    
+
     def get_absolute_url(self):
         return '/some/fake/path/%s/' % self.pk
 
@@ -35,7 +35,7 @@ class Subject(models.Model):
     name = models.CharField(max_length=255)
     url = models.URLField(verify_exists=False)
     created = models.DateTimeField(default=datetime.datetime.now)
-    
+
     def __unicode__(self):
         return self.name
 
@@ -44,6 +44,6 @@ class MediaBit(models.Model):
     note = models.ForeignKey(Note, related_name='media_bits')
     title = models.CharField(max_length=32)
     image = models.FileField(blank=True, null=True, upload_to='bits/')
-    
+
     def __unicode__(self):
         return self.title

@@ -12,6 +12,3 @@ if oauth2 and oauth_provider:
 
 ROOT_URLCONF = 'core.tests.api_urls'
 MEDIA_URL = 'http://localhost:8080/media/'
-
-
-

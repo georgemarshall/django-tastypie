@@ -159,8 +159,8 @@ class DigestAuthenticationTestCase(TestCase):
         request.META['HTTP_AUTHORIZATION'] = python_digest.build_authorization_request(
             john_doe.username,
             request.method,
-            '/', # uri
-            1,   # nonce_count
+            '/',  # uri
+            1,    # nonce_count
             digest_challenge=auth_request['WWW-Authenticate'],
             password=john_doe.api_key.key
         )
@@ -200,7 +200,7 @@ class OAuthAuthenticationTestCase(TestCase):
             'oauth_token': 'foo',
         }
         user = User.objects.create_user('daniel', 'test@example.com', 'password')
-        request.META['Authorization'] = 'OAuth ' + ','.join([key+'='+value for key, value in request.REQUEST.items()])
+        request.META['Authorization'] = 'OAuth ' + ','.join([key + '=' + value for key, value in request.REQUEST.iteritems()])
         resource, _ = Resource.objects.get_or_create(url='test', defaults={
             'name': 'Test Resource'
         })

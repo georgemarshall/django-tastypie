@@ -16,11 +16,11 @@ class PaginatorTestCase(TestCase):
         self.data_set = Note.objects.all()
         self.old_debug = settings.DEBUG
         settings.DEBUG = True
-    
+
     def tearDown(self):
         settings.DEBUG = self.old_debug
         super(PaginatorTestCase, self).tearDown()
-    
+
     def _get_query_count(self):
         try:
             from django.db import connections
@@ -34,7 +34,7 @@ class PaginatorTestCase(TestCase):
         self.assertEqual(len(self._get_query_count()), 0)
         request = QueryDict('', mutable=True)
         paginator = Paginator(request, self.data_set, resource_uri='/api/v1/notes/', limit=2, offset=0)
-        
+
         # REGRESSION: Check to make sure only part of the cache is full.
         # We used to run ``len()`` on the ``QuerySet``, which would populate
         # the entire result set. Owwie.
@@ -42,7 +42,7 @@ class PaginatorTestCase(TestCase):
         self.assertEqual(len(self._get_query_count()), 1)
         # Should be nothing in the cache.
         self.assertEqual(paginator.objects._result_cache, None)
-        
+
         meta = paginator.page()['meta']
         self.assertEqual(meta['limit'], 2)
         self.assertEqual(meta['offset'], 0)
@@ -79,7 +79,7 @@ class PaginatorTestCase(TestCase):
         self.assertEqual(meta['previous'], None)
         self.assertEqual(meta['next'], None)
         self.assertEqual(meta['total_count'], 6)
-    
+
     def test_all(self):
         request = QueryDict('', mutable=True)
         request.update({'limit': 0})
@@ -92,7 +92,7 @@ class PaginatorTestCase(TestCase):
         self.assertEqual(len(page['objects']), 6)
         self.assertFalse('previous' in meta)
         self.assertFalse('next' in meta)
-    
+
     def test_complex_get(self):
         request = QueryDict('', mutable=True)
         request.update({
@@ -139,12 +139,12 @@ class PaginatorTestCase(TestCase):
         paginator.offset = 10
         self.assertEqual(paginator.get_offset(), 10)
 
-        paginator.offset= -10
+        paginator.offset = -10
         self.assertRaises(BadRequest, paginator.get_offset)
 
         paginator.offset = 'hAI!'
         self.assertRaises(BadRequest, paginator.get_offset)
-    
+
     def test_regression_nonqueryset(self):
         request = QueryDict('', mutable=True)
         paginator = Paginator(request, ['foo', 'bar', 'baz'], limit=2, offset=0)
@@ -152,7 +152,7 @@ class PaginatorTestCase(TestCase):
         # differently.
         page = paginator.page()
         self.assertEqual(page['objects'], ['foo', 'bar'])
-    
+
     def test_unicode_request(self):
         request = QueryDict('', mutable=True)
         request.update({

@@ -11,17 +11,18 @@ class Note(models.Model):
     is_active = models.BooleanField(default=True)
     created = models.DateTimeField(default=datetime.datetime.now)
     updated = models.DateTimeField(default=datetime.datetime.now)
-    
+
     def __unicode__(self):
         return self.title
-    
+
     def save(self, *args, **kwargs):
         self.updated = datetime.datetime.now()
         return super(Note, self).save(*args, **kwargs)
 
+
 class AnnotatedNote(models.Model):
     note = models.OneToOneField(Note, related_name='annotated', null=True)
     annotations = models.TextField()
-    
+
     def __unicode__(self):
         return u"Annotated %s" % self.note.title
