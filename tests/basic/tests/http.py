@@ -1,5 +1,4 @@
 from django.test.testcases import TestCase
-
 from django.utils import simplejson as json
 from django.utils import unittest
 from tastypie.serializers import lxml, yaml, biplist
