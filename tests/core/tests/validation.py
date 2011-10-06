@@ -25,15 +25,8 @@ class NoteForm(forms.Form):
 
 class ValidationTestCase(TestCase):
     def test_init(self):
-        try:
-            valid = Validation()
-        except Exception, e:
-            self.fail("Initialization failed when it should have succeeded.")
-
-        try:
-            valid = Validation(form_class='foo')
-        except Exception, e:
-            self.fail("Initialization failed when it should have succeeded again.")
+        Validation()
+        Validation(form_class='foo')
 
     def test_is_valid(self):
         valid = Validation()
@@ -52,11 +45,7 @@ class ValidationTestCase(TestCase):
 class FormValidationTestCase(TestCase):
     def test_init(self):
         self.assertRaises(ImproperlyConfigured, FormValidation)
-
-        try:
-            valid = FormValidation(form_class=NoteForm)
-        except Exception, e:
-            self.fail("Initialization failed when it should have succeeded.")
+        FormValidation(form_class=NoteForm)
 
     def test_is_valid(self):
         valid = FormValidation(form_class=NoteForm)
@@ -103,11 +92,7 @@ class FormValidationTestCase(TestCase):
 class CleanedDataFormValidationTestCase(TestCase):
     def test_init(self):
         self.assertRaises(ImproperlyConfigured, CleanedDataFormValidation)
-
-        try:
-            valid = CleanedDataFormValidation(form_class=NoteForm)
-        except Exception, e:
-            self.fail("Initialization failed when it should have succeeded.")
+        CleanedDataFormValidation(form_class=NoteForm)
 
     def test_is_valid(self):
         valid = CleanedDataFormValidation(form_class=NoteForm)

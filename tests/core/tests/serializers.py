@@ -238,6 +238,7 @@ class SerializerTestCase(TestCase):
 
         sample_1 = self.get_sample1()
         options = {'callback': 'myCallback'}
+        self.assertEqual(serializer.to_jsonp(sample_1, options), 'myCallback({"age": 27, "date_joined": "2010-03-27", "name": "Daniel"})')
 
     @unittest.skipUnless(biplist, 'biplist not installed')
     def test_to_plist(self):

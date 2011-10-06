@@ -1,12 +1,19 @@
 import datetime
-from dateutil.tz import *
+from dateutil.tz import tzoffset
+from decimal import Decimal
+
 from django.db import models
 from django.contrib.auth.models import User
 from django.test import TestCase
 from tastypie.bundle import Bundle
 from tastypie.exceptions import ApiFieldError, NotFound
-from tastypie.fields import *
+from tastypie.fields import (
+    NOT_PROVIDED, ApiField, CharField, FileField, IntegerField, FloatField,
+    DecimalField, ListField, DictField, BooleanField, TimeField, DateField,
+    DateTimeField, ToOneField, ToManyField
+)
 from tastypie.resources import ModelResource
+
 from core.models import Note, Subject, MediaBit
 
 
@@ -462,7 +469,7 @@ class DateFieldTestCase(TestCase):
         self.assertEqual(field_3.dehydrate(bundle), datetime.date(2010, 4, 2))
 
     def test_hydrate(self):
-        note = Note.objects.get(pk=1)
+        # note = Note.objects.get(pk=1)
 
         bundle_1 = Bundle(data={
             'date': '2010-05-12',
@@ -527,7 +534,7 @@ class DateTimeFieldTestCase(TestCase):
         self.assertEqual(field_3.dehydrate(bundle), datetime.datetime(2010, 4, 2, 1, 11))
 
     def test_hydrate(self):
-        note = Note.objects.get(pk=1)
+        # note = Note.objects.get(pk=1)
 
         bundle_1 = Bundle(data={
             'datetime': '2010-05-12 10:36:28',
@@ -731,12 +738,12 @@ class ToOneFieldTestCase(TestCase):
         fk_bundle = field_8.hydrate(bundle)
         self.assertEqual(field_8.hydrate(bundle), None)
         # Then use an unsaved object in the bundle also with ``null=True``.
-        new_note = Note(
-            title='Biplanes for all!',
-            slug='biplanes-for-all',
-            content='Somewhere, east of Manhattan, will lie the mythical land of planes with more one wing...'
-        )
-        new_bundle = Bundle(obj=new_note)
+        # new_note = Note(
+        #     title='Biplanes for all!',
+        #     slug='biplanes-for-all',
+        #     content='Somewhere, east of Manhattan, will lie the mythical land of planes with more one wing...'
+        # )
+        # new_bundle = Bundle(obj=new_note)
         field_9 = ToOneField(UserResource, 'author', null=True)
         field_9.instance_name = 'author'
         self.assertEqual(field_9.hydrate(bundle), None)
@@ -926,13 +933,7 @@ class ToManyFieldTestCase(TestCase):
         bundle_1 = Bundle(obj=note)
         field_1 = ToManyField(SubjectResource, 'subjects')
         field_1.instance_name = 'm2m'
-
-        try:
-            # self.assertRaises isn't cooperating here. Do it the hard way.
-            field_1.dehydrate(bundle_1)
-            self.fail()
-        except ApiFieldError:
-            pass
+        self.assertRaises(ApiFieldError, field_1.dehydrate, bundle_1)
 
         field_2 = ToManyField(SubjectResource, 'subjects', null=True)
         field_2.instance_name = 'm2m'
@@ -980,7 +981,7 @@ class ToManyFieldTestCase(TestCase):
             pass
 
     def test_dehydrate_with_callable(self):
-        note = Note()
+        # note = Note()
         bundle_1 = Bundle(obj=self.note_2)
         field_1 = ToManyField(SubjectResource, attribute=lambda bundle: Subject.objects.filter(notes=bundle.obj, name__startswith='Personal'))
         field_1.instance_name = 'm2m'

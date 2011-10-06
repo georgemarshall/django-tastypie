@@ -95,3 +95,4 @@ class AnnotatedNoteModelResourceTestCase(TestCase):
         resource_1 = NoteWithAnnotationsResource()
         n1_bundle = resource_1.build_bundle(obj=n1)
         dehydrated = resource_1.full_dehydrate(n1_bundle)
+        self.assertTrue(dehydrated)

@@ -1,4 +1,4 @@
-from django.conf.urls.defaults import *
+from django.conf.urls.defaults import patterns, include, url
 from tastypie import fields
 from tastypie.resources import ModelResource
 from core.models import Note, Subject
@@ -26,5 +26,5 @@ api.register(UserResource())
 api.register(SubjectResource())
 
 urlpatterns = patterns('',
-    (r'^api/', include(api.urls)),
+    url(r'^api/', include(api.urls)),
 )
