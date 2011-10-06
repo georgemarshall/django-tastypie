@@ -1,6 +1,8 @@
-from django.conf.urls.defaults import *
+from __future__ import absolute_import
+
 from tastypie.api import Api
-from complex.api.resources import PostResource, ProfileResource, CommentResource, UserResource, GroupResource
+
+from .resources import PostResource, ProfileResource, CommentResource, UserResource, GroupResource
 
 
 api = Api(api_name='v1')
