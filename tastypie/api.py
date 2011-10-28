@@ -106,22 +106,20 @@ class Api(object):
         to the ``Api``. Useful for discovery.
         """
         serializer = Serializer()
-        available_resources = {}
 
         if api_name is None:
             api_name = self.api_name
 
-        for name in sorted(self._registry.keys()):
-            available_resources[name] = {
-                'list_endpoint': self._build_reverse_url("api_dispatch_list", kwargs={
-                    'api_name': api_name,
-                    'resource_name': name,
-                }),
-                'schema': self._build_reverse_url("api_get_schema", kwargs={
-                    'api_name': api_name,
-                    'resource_name': name,
-                }),
-            }
+        available_resources = dict((name, {
+            'list_endpoint': self._build_reverse_url("api_dispatch_list", kwargs={
+                'api_name': api_name,
+                'resource_name': name,
+            }),
+            'schema': self._build_reverse_url("api_get_schema", kwargs={
+                'api_name': api_name,
+                'resource_name': name,
+            }),
+        }) for name in self._registry.iterkeys())
 
         desired_format = determine_format(request, serializer)
         options = {}
