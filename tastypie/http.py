@@ -1,10 +1,14 @@
 """
 The various HTTP responses for use in returning proper HTTP codes.
 """
-from django.http import HttpResponse
+from django.http import (
+    HttpResponse, HttpResponseNotModified, HttpResponseBadRequest,
+    HttpResponseNotFound, HttpResponseForbidden, HttpResponseNotAllowed,
+    HttpResponseGone, HttpResponseServerError
+)
 
 
-class HttpCreated(HttpResponse):
+class HttpResponseCreated(HttpResponse):
     status_code = 201
     
     def __init__(self, *args, **kwargs):
@@ -18,58 +22,46 @@ class HttpCreated(HttpResponse):
         self['Location'] = location
 
 
-class HttpAccepted(HttpResponse):
+class HttpResponseAccepted(HttpResponse):
     status_code = 202
 
 
-class HttpNoContent(HttpResponse):
+class HttpResponseNoContent(HttpResponse):
     status_code = 204
 
 
-class HttpMultipleChoices(HttpResponse):
+class HttpResponseMultipleChoices(HttpResponse):
     status_code = 300
 
 
-class HttpSeeOther(HttpResponse):
+class HttpResponseSeeOther(HttpResponse):
     status_code = 303
 
 
-class HttpNotModified(HttpResponse):
-    status_code = 304
-
-
-class HttpBadRequest(HttpResponse):
-    status_code = 400
-
-
-class HttpUnauthorized(HttpResponse):
+class HttpResponseUnauthorized(HttpResponse):
     status_code = 401
 
 
-class HttpForbidden(HttpResponse):
-    status_code = 403
-
-
-class HttpNotFound(HttpResponse):
-    status_code = 404
-
-
-class HttpMethodNotAllowed(HttpResponse):
-    status_code = 405
-
-
-class HttpConflict(HttpResponse):
+class HttpResponseConflict(HttpResponse):
     status_code = 409
 
 
-class HttpGone(HttpResponse):
-    status_code = 410
-
-
-class HttpApplicationError(HttpResponse):
-    status_code = 500
-
-
-class HttpNotImplemented(HttpResponse):
+class HttpResponseNotImplemented(HttpResponse):
     status_code = 501
 
+
+HttpCreated = HttpResponseCreated
+HttpAccepted = HttpResponseAccepted
+HttpNoContent = HttpResponseNoContent
+HttpMultipleChoices = HttpResponseMultipleChoices
+HttpSeeOther = HttpResponseSeeOther
+HttpNotModified = HttpResponseNotModified
+HttpBadRequest = HttpResponseBadRequest
+HttpUnauthorized = HttpResponseUnauthorized
+HttpForbidden = HttpResponseForbidden
+HttpNotFound = HttpResponseNotFound
+HttpMethodNotAllowed = HttpResponseNotAllowed
+HttpConflict = HttpResponseConflict
+HttpGone = HttpResponseGone
+HttpApplicationError = HttpResponseServerError
+HttpNotImplemented = HttpResponseNotImplemented
