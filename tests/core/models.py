@@ -1,6 +1,7 @@
 import datetime
 from django.contrib.auth.models import User
 from django.db import models
+from tastypie.utils import now, aware_datetime
 
 
 class Note(models.Model):
@@ -9,18 +10,18 @@ class Note(models.Model):
     slug = models.SlugField()
     content = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
-    created = models.DateTimeField(default=datetime.datetime.now)
-    updated = models.DateTimeField(default=datetime.datetime.now)
+    created = models.DateTimeField(default=now)
+    updated = models.DateTimeField(default=now)
 
     def __unicode__(self):
         return self.title
 
     def save(self, *args, **kwargs):
-        self.updated = datetime.datetime.now()
+        self.updated = now()
         return super(Note, self).save(*args, **kwargs)
 
     def what_time_is_it(self):
-        return datetime.datetime(2010, 4, 1, 0, 48)
+        return aware_datetime(2010, 4, 1, 0, 48)
 
     def get_absolute_url(self):
         return '/some/fake/path/%s/' % self.pk
@@ -34,7 +35,7 @@ class Subject(models.Model):
     notes = models.ManyToManyField(Note, related_name='subjects')
     name = models.CharField(max_length=255)
     url = models.URLField(verify_exists=False)
-    created = models.DateTimeField(default=datetime.datetime.now)
+    created = models.DateTimeField(default=now)
 
     def __unicode__(self):
         return self.name
