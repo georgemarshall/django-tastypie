@@ -93,7 +93,8 @@ class Api(object):
 
         for name in sorted(self._registry.keys()):
             self._registry[name].api_name = self.api_name
-            pattern_list.append((r"^(?P<api_name>%s)/" % self.api_name, include(self._registry[name].urls)))
+            resource_url = url(r"^(?P<api_name>%s)/" % self.api_name, include(self._registry[name].urls))
+            pattern_list.append(resource_url)
 
         urlpatterns = self.override_urls() + patterns('',
             *pattern_list

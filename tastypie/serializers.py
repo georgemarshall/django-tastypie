@@ -7,7 +7,7 @@ from django.utils import simplejson
 from django.utils.encoding import force_unicode
 from tastypie.bundle import Bundle
 from tastypie.exceptions import UnsupportedFormat
-from tastypie.utils import format_datetime, format_date, format_time
+from tastypie.utils import format_datetime, format_date, format_time, make_naive
 try:
     import lxml
     from lxml.etree import parse as parse_xml
@@ -23,6 +23,34 @@ try:
     import biplist
 except ImportError:
     biplist = None
+
+
+# Ugh & blah.
+# So doing a regular dump is generally fine, since Tastypie doesn't usually
+# serialize advanced types. *HOWEVER*, it will dump out Python Unicode strings
+# as a custom YAML tag, which of course ``yaml.safe_load`` can't handle.
+if yaml is not None:
+    from yaml.constructor import SafeConstructor
+    from yaml.loader import Reader, Scanner, Parser, Composer, Resolver
+
+    class TastypieConstructor(SafeConstructor):
+        def construct_yaml_unicode_dammit(self, node):
+            value = self.construct_scalar(node)
+            try:
+                return value.encode('ascii')
+            except UnicodeEncodeError:
+                return value
+
+    TastypieConstructor.add_constructor(u'tag:yaml.org,2002:python/unicode', TastypieConstructor.construct_yaml_unicode_dammit)
+
+    class TastypieLoader(Reader, Scanner, Parser, Composer, TastypieConstructor, Resolver):
+        def __init__(self, stream):
+            Reader.__init__(self, stream)
+            Scanner.__init__(self)
+            Parser.__init__(self)
+            Composer.__init__(self)
+            TastypieConstructor.__init__(self)
+            Resolver.__init__(self)
 
 
 class Serializer(object):
@@ -92,6 +120,7 @@ class Serializer(object):
 
         Default is ``iso-8601``, which looks like "2010-12-16T03:02:14".
         """
+        data = make_naive(data)
         if self.datetime_formatting == 'rfc-2822':
             return format_datetime(data)
 
@@ -354,7 +383,7 @@ class Serializer(object):
         if yaml is None:
             raise ImproperlyConfigured("Usage of the YAML aspects requires yaml.")
 
-        return yaml.safe_load(content)
+        return yaml.load(content, Loader=TastypieLoader)
 
     def to_plist(self, data, options=None):
         """
