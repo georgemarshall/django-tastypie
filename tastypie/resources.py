@@ -77,7 +77,6 @@ class ResourceOptions(object):
     include_resource_uri = True
     include_absolute_url = False
     always_return_data = False
-    # children = []
 
     def __new__(cls, meta=None):
         overrides = {}
@@ -167,9 +166,7 @@ class Resource(object):
     __metaclass__ = DeclarativeMetaclass
 
     def __init__(self, api_name=None):
-        self._fields = deepcopy(self.base_fields)
-        self._registry = {}
-        self._canonicals = {}
+        self.fields = deepcopy(self.base_fields)
 
         if not api_name is None:
             self._meta.api_name = api_name
@@ -178,20 +175,6 @@ class Resource(object):
         if name in self.fields:
             return self.fields[name]
         raise AttributeError(name)
-
-    @property
-    def fields(self):
-        all_fields = deepcopy(self._fields)
-
-        # Add our children URIs to the fields
-        all_fields.update(dict(
-            ('%s_uri' % name, child.fields['resource_uri'])
-        for name, child in self._registry.iteritems()))
-        return all_fields
-
-    @fields.setter
-    def fields(self, value):
-        self._fields = value
 
     def wrap_view(self, view):
         """
@@ -261,7 +244,7 @@ class Resource(object):
             log = logging.getLogger('django.request.tastypie')
             log.error('Internal Server Error: %s' % request.path, exc_info=sys.exc_info(), extra={'status_code': 500, 'request':request})
 
-            if django.VERSION < (1, 3, 0) and getattr(settings, 'SEND_BROKEN_LINK_EMAILS', False):
+            if django.VERSION < (1, 3) and getattr(settings, 'SEND_BROKEN_LINK_EMAILS', False):
                 from django.core.mail import mail_admins
                 subject = 'Error (%s IP): %s' % ((request.META.get('REMOTE_ADDR') in settings.INTERNAL_IPS and 'internal' or 'EXTERNAL'), request.path)
                 try:
@@ -294,17 +277,12 @@ class Resource(object):
         """
         # Due to the way Django parses URLs, ``get_multiple`` won't work without
         # a trailing slash.
-        base = [
+        return [
             url(r"^(?P<resource_name>%s)%s$" % (self._meta.resource_name, trailing_slash()), self.wrap_view('dispatch_list'), name="api_dispatch_list"),
             url(r"^(?P<resource_name>%s)/schema%s$" % (self._meta.resource_name, trailing_slash()), self.wrap_view('get_schema'), name="api_get_schema"),
-            url(r"^(?P<resource_name>%s)/set/(?P<pk_list>\w[\w;-]*)%s$" % (self._meta.resource_name, trailing_slash()), self.wrap_view('get_multiple'), name="api_get_multiple"),
-            url(r"^(?P<resource_name>%s)/(?P<pk>\w[\w-]*)%s$" % (self._meta.resource_name, trailing_slash()), self.wrap_view('dispatch_detail'), name="api_dispatch_detail"),
+            url(r"^(?P<resource_name>%s)/set/(?P<pk_list>\w[\w/;-]*)%s$" % (self._meta.resource_name, trailing_slash()), self.wrap_view('get_multiple'), name="api_get_multiple"),
+            url(r"^(?P<resource_name>%s)/(?P<pk>\w[\w/-]*)%s$" % (self._meta.resource_name, trailing_slash()), self.wrap_view('dispatch_detail'), name="api_dispatch_detail"),
         ]
-        # Add child resources
-        base += [
-            url(r"^%s/(?P<parent_pk>\w[\w-]*)/" % (self._meta.resource_name,), include(child.urls, namespace=child._meta.urlconf_namespace))
-        for child in self._registry.itervalues()]
-        return base
 
     def override_urls(self):
         """
@@ -501,15 +479,17 @@ class Resource(object):
             allowed = []
 
         request_method = request.method.lower()
+        allows = ','.join(map(str.upper, allowed))
 
         if request_method == "options":
-            allows = ','.join(map(str.upper, allowed))
             response = HttpResponse(allows)
             response['Allow'] = allows
             raise ImmediateHttpResponse(response=response)
 
         if not request_method in allowed:
-            raise ImmediateHttpResponse(response=http.HttpMethodNotAllowed())
+            response = http.HttpMethodNotAllowed(allows)
+            response['Allow'] = allows
+            raise ImmediateHttpResponse(response=response)
 
         return request_method
 
@@ -620,16 +600,13 @@ class Resource(object):
         """
         raise NotImplementedError()
 
-    def get_resource_list_uri(self, parent=None):
+    def get_resource_list_uri(self):
         """
         Returns a URL specific to this resource's list endpoint.
         """
         kwargs = {
             'resource_name': self._meta.resource_name,
         }
-
-        if isinstance(parent, Bundle):
-            kwargs['parent_pk'] = ''
 
         if self._meta.api_name is not None:
             kwargs['api_name'] = self._meta.api_name
@@ -1429,47 +1406,6 @@ class Resource(object):
         self.log_throttled_access(request)
         return self.create_response(request, object_list)
 
-    # API
-    def register(self, resource, canonical=True):
-        resource_name = getattr(resource._meta, 'resource_name', None)
-
-        if resource_name is None:
-            raise ImproperlyConfigured("Resource %r must define a 'resource_name'." % resource)
-
-        # setattr(resource, 'parent', self)
-        self._registry[resource_name] = resource
-        setattr(self, 'get_%s_uri' % resource_name, resource.get_resource_list_uri)
-        def dehydrate_function(name):
-            get_uri = getattr(self, name)
-
-            def dehydrate_uri(bundle):
-                try:
-                    return get_uri(bundle)
-                except NotImplementedError:
-                    return ''
-                except NoReverseMatch:
-                    return ''
-
-            return dehydrate_uri
-        setattr(self, 'dehydrate_%s_uri' % resource_name, dehydrate_function('get_%s_uri' % resource_name))
-
-        if canonical is True:
-            if resource_name in self._canonicals:
-                warnings.warn("A new resource '%r' is replacing the existing canonical URL for '%s'." % (resource, resource_name), Warning, stacklevel=2)
-
-            self._canonicals[resource_name] = resource
-            # TODO: This is messy, but makes URI resolution on FK/M2M fields
-            #       work consistently.
-            resource._meta.api_name = self._meta.api_name
-            resource.__class__.Meta.api_name = self._meta.api_name
-
-    def unregister(self, resource_name):
-        if resource_name in self._registry:
-            del(self._registry[resource_name])
-
-        if resource_name in self._canonicals:
-            del(self._canonicals[resource_name])
-
 
 class ModelDeclarativeMetaclass(DeclarativeMetaclass):
     def __new__(cls, name, bases, attrs):
@@ -1868,7 +1804,6 @@ class ModelResource(Resource):
                 bundle.data.update(kwargs)
                 bundle = self.full_hydrate(bundle)
                 lookup_kwargs = kwargs.copy()
-
                 for key in kwargs.keys():
                     if key == 'pk':
                         continue
