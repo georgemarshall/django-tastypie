@@ -126,6 +126,16 @@ class PaginatorTestCase(TestCase):
         paginator.limit = 'hAI!'
         self.assertRaises(BadRequest, paginator.get_limit)
 
+        # Test the max_limit.
+        paginator.limit = 1000
+        self.assertEqual(paginator.get_limit(), 1000)
+
+        paginator.limit = 1001
+        self.assertEqual(paginator.get_limit(), 1000)
+
+        paginator = Paginator({}, self.data_set, limit=20, offset=0, max_limit=10)
+        self.assertEqual(paginator.get_limit(), 10)
+
     def test_offset(self):
         request = QueryDict('', mutable=True)
         paginator = Paginator(request, self.data_set, limit=20, offset=0)

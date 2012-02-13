@@ -14,8 +14,8 @@ Requirements
 Required
 --------
 
-* Python 2.5+ (http://python.org/)
-* Django 1.3+ (https://www.djangoproject.com/)
+* Python 2.5+
+* Django 1.2+ (May work on Django 1.1)
 * mimeparse 0.1.3+ (http://code.google.com/p/mimeparse/)
 
   * Older versions will work, but their behavior on JSON/JSONP is a touch wonky.
@@ -25,10 +25,8 @@ Required
 Optional
 --------
 
-* python-digest (https://bitbucket.org/akoha/python-digest/)
-* oauth2 (https://github.com/simplegeo/python-oauth2)
-* django-oauth-plus (https://bitbucket.org/david/django-oauth-plus/)
-* lxml (http://codespeak.net/lxml/) if using the XML serializer
+* python_digest (https://bitbucket.org/akoha/python-digest/)
+* lxml (http://lxml.de/) if using the XML serializer
 * pyyaml (http://pyyaml.org/) if using the YAML serializer
 * biplist (http://explorapp.com/biplist/) if using the binary plist serializer
 
@@ -100,4 +98,4 @@ Reference Material
 * http://jacobian.org/writing/rest-worst-practices/
 
 :author: Daniel Lindsley
-:date: 2011/10/05
+:date: 2011/09/16
